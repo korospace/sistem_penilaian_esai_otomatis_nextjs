@@ -1,0 +1,158 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum ExamStatus {
+  NOT_YET
+  ON_GOING
+  COMPLETED
+}
+
+model User {
+  id_user       Int      @id @default(autoincrement())
+  username      String   @db.VarChar(255)
+  password      String   @db.VarChar(255)
+  full_name     String   @db.VarChar(255)
+  id_user_role  Int      @default(0)
+  created_by    Int      @default(0)
+  created_date  DateTime @default(now())
+  updated_by    Int      @default(0)
+  updated_date  DateTime?
+  deleted_by    Int      @default(0)
+  deleted_date  DateTime?
+  exam_member   ExamMember[]
+  exam_answer   ExamAnswer[]
+
+  @@map("user")
+}
+
+model UserRole {
+  id_user_role  Int      @id @default(autoincrement())
+  role_name     String   @db.VarChar(255)
+
+  @@map("user_role")
+}
+
+model Synonym {
+  id_synonym Int     @id @default(autoincrement())
+  word       String  @db.VarChar(255)
+  tag        String? @db.VarChar(255)
+  synonym    String? @db.VarChar(255)
+
+  @@map("synonym")
+}
+
+model Course {
+  id_course     Int       @id @default(autoincrement())
+  name          String    @db.VarChar(255)
+  description   String    @db.VarChar(255)
+  created_by    Int       @default(0)
+  created_date  DateTime  @default(now())
+  updated_by    Int       @default(0)
+  updated_date  DateTime?
+  deleted_by    Int       @default(0)
+  deleted_date  DateTime?
+  exams         Exam[]
+
+  @@map("course")
+}
+
+model Exam {
+  id_exam       Int       @id @default(autoincrement())
+  id_course     Int       
+  title         String    @db.VarChar(255)
+  description   String?   @db.VarChar(255)
+  start_date    DateTime
+  end_date      DateTime
+  duration      Int
+  created_by    Int       @default(0)
+  created_date  DateTime  @default(now())
+  updated_by    Int       @default(0)
+  updated_date  DateTime?
+  deleted_by    Int       @default(0)
+  deleted_date  DateTime?
+  course        Course    @relation(fields: [id_course], references: [id_course])
+  exam_member   ExamMember[]
+  exam_question ExamQuestion[]
+
+  @@map("exam")
+}
+
+model ExamMember {
+  id_exam_member  Int         @id @default(autoincrement())
+  id_exam         Int
+  id_user         Int
+  start_date      DateTime?
+  end_date        DateTime?
+  status          ExamStatus  @default(NOT_YET)
+  score           Float?
+  grade           String?
+  created_by      Int         @default(0)
+  created_date    DateTime    @default(now())
+  updated_by      Int         @default(0)
+  updated_date    DateTime?
+  deleted_by      Int         @default(0)
+  deleted_date    DateTime?
+  exam            Exam        @relation(fields: [id_exam], references: [id_exam])
+  user            User        @relation(fields: [id_user], references: [id_user])
+
+  @@map("exam_member")
+}
+
+model ExamQuestion {
+  id_exam_question  Int         @id @default(autoincrement())
+  id_exam           Int
+  question          String      @db.Text
+  answer_key        String      @db.MediumText
+  created_by        Int         @default(0)
+  created_date      DateTime    @default(now())
+  updated_by        Int         @default(0)
+  updated_date      DateTime?
+  deleted_by        Int         @default(0)
+  deleted_date      DateTime?
+  exam              Exam        @relation(fields: [id_exam], references: [id_exam])
+  exam_answer       ExamAnswer[]
+
+  @@map("exam_question")
+}
+
+model ExamAnswer {
+  id_exam_answer       BigInt        @id @default(autoincrement())
+  id_exam_question     Int
+  id_user              Int
+  answer               String        @db.MediumText
+  answer_cleaning      String        @db.Text
+  answer_stemming      String        @db.Text
+  answer_stopword      String        @db.Text
+  answer_sp            String?       @db.Text
+  answer_ngram         String        @db.Text
+  answer_key           String        @db.MediumText
+  answer_key_cleaning  String        @db.Text
+  answer_key_stemming  String        @db.Text
+  answer_key_stopword  String        @db.Text
+  answer_key_sp        String?       @db.Text
+  answer_key_ngram     String        @db.Text
+  similiariy_matrix    String        @db.MediumText
+  max_simmatrix        String        @db.Text
+  created_by           Int           @default(0)
+  created_date         DateTime      @default(now())
+  updated_by           Int           @default(0)
+  updated_date         DateTime?
+  deleted_by           Int           @default(0)
+  deleted_date         DateTime?
+  exam_question        ExamQuestion  @relation(fields: [id_exam_question], references: [id_exam_question])
+  user                 User          @relation(fields: [id_user], references: [id_user])
+
+  @@map("exam_answer")
+}
